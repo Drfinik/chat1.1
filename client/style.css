@@ -50,3 +50,12 @@
 .message-item {
     margin-bottom: 5px;
 }
+.user-select {
+  display: flex;
+  align-items: center;
+    margin-bottom: 10px;
+}
+.user-select select {
+    margin-left: 10px;
+    padding: 8px;
+}

@@ -2,12 +2,12 @@ const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 8080 });
 
 const users = new Map(); // {userId: websocketConnection, name: userName}
-const usersInfo = new Map(); // {userName: {userId, password}} // хранилище пользователей
+const usersInfo = new Map(); // {userName: {userId, password}}
 const messages = [];
 
 wss.on('connection', (ws) => {
-    let userId = null; // Идентификатор пользователя
-    let userName = null; // Имя пользователя
+    let userId = null;
+    let userName = null;
 
     ws.on('message', (message) => {
         try {
@@ -15,35 +15,21 @@ wss.on('connection', (ws) => {
 
             switch(parsedMessage.type) {
                 case 'register':
-                registerUser(ws, parsedMessage.name, parsedMessage.password);
-                break;
-              case 'login':
-                loginUser(ws, parsedMessage.name, parsedMessage.password);
-                break;
+                    registerUser(ws, parsedMessage.name, parsedMessage.password);
+                    break;
+                case 'login':
+                    loginUser(ws, parsedMessage.name, parsedMessage.password);
+                    break;
                 case 'message':
-                if (!userId) {
-                  ws.send(JSON.stringify({type: 'error', message: 'User is not logged in'}));
-                    return;
-                }
-                    const newMessage = {
-                        userId,
-                        name: userName,
-                        text: parsedMessage.text,
-                        timestamp: new Date(),
-                    };
-                    messages.push(newMessage);
-
-                    // Рассылаем сообщение всем подключенным пользователям
-                    users.forEach((client) => {
-                        if (client.userId !== userId) { // Отправляем всем кроме отправителя
-                            client.ws.send(JSON.stringify({ type: 'message', ...newMessage }));
-                        }
-                    });
-                    ws.send(JSON.stringify({ type: 'message', ...newMessage })); // Отправляем отправителю для подтверждения
-                  break;
+                    if (!userId) {
+                        ws.send(JSON.stringify({type: 'error', message: 'User is not logged in'}));
+                        return;
+                    }
+                    handleMessage(ws, parsedMessage);
+                    break;
                 default:
-                ws.send(JSON.stringify({type: 'error', message: 'Unknown message type'}));
-                break;
+                    ws.send(JSON.stringify({type: 'error', message: 'Unknown message type'}));
+                    break;
             }
 
         } catch (e) {
@@ -55,14 +41,14 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         console.log(`User ${userId} disconnected`);
         if (userId) {
-          users.delete(userId);
+            users.delete(userId);
         }
     });
 
     ws.on('error', (error) => {
         console.error("WebSocket error", error);
         if (userId) {
-           users.delete(userId);
+            users.delete(userId);
         }
     });
 
@@ -80,7 +66,8 @@ wss.on('connection', (ws) => {
 
         console.log(`User ${name} registered with ID: ${userId}`);
         ws.send(JSON.stringify({ type: 'register_success', userId: newUserId, name }));
-        ws.send(JSON.stringify({ type: "history", messages })); // Send history on login
+          sendUserListToAll(); // Send updated user list to all on login
+         ws.send(JSON.stringify({ type: "history", messages })); // Send history on login
     }
 
     function loginUser(ws, name, password) {
@@ -93,12 +80,49 @@ wss.on('connection', (ws) => {
         users.set(userInfo.userId, {ws, userId: userInfo.userId, name});
         userId = userInfo.userId;
         userName = name;
-        
+
         console.log(`User ${name} logged in with ID: ${userId}`);
-        ws.send(JSON.stringify({ type: 'login_success', userId, name }));
+         ws.send(JSON.stringify({ type: 'login_success', userId, name }));
+          sendUserListToAll();  // Send updated user list to all on login
         ws.send(JSON.stringify({ type: "history", messages })); // Send history on login
     }
-});
+      function handleMessage(ws, parsedMessage) {
+          const newMessage = {
+              userId,
+              name: userName,
+              text: parsedMessage.text,
+              timestamp: new Date(),
+              recipient: parsedMessage.recipient, // Add recipient
+          };
+          messages.push(newMessage);
+          if (newMessage.recipient === "all") {
+             users.forEach((client) => {
+                 if (client.userId !== userId) {
+                     client.ws.send(JSON.stringify({ type: 'message', ...newMessage }));
+                 }
+               });
+                 ws.send(JSON.stringify({ type: 'message', ...newMessage }));
+          } else {
+            const recipient = users.get(parseInt(newMessage.recipient));
+              if(recipient) {
+                recipient.ws.send(JSON.stringify({ type: 'message', ...newMessage }));
+                ws.send(JSON.stringify({ type: 'message', ...newMessage })); // Send back to sender for feedback
+              }
+              else {
+                 ws.send(JSON.stringify({type: 'error', message: `User with id ${newMessage.recipient} not found`}));
+              }
+          }
+      }
+    function sendUserListToAll() {
+          const userList = Array.from(users.values()).map((user) => ({
+            userId: user.userId,
+            name: user.name,
+          }));
+          users.forEach((client) => {
+              client.ws.send(JSON.stringify({type: "userList", users: userList}));
+          });
+    }
 
+});
 
 console.log("WebSocket Server started on port 8080");

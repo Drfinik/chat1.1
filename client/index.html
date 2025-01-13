@@ -21,6 +21,12 @@
   </div>
     <div class="chat-container hidden">
         <div id="messages" class="messages"></div>
+         <div class="user-select">
+             <label for="user-recipient">Отправить:</label>
+               <select id="user-recipient">
+                  <option value="all">Все</option>
+               </select>
+         </div>
         <div class="input-area">
             <input type="text" id="messageInput" placeholder="Введите сообщение">
             <button id="sendButton">Отправить</button>
