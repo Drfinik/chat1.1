@@ -5,28 +5,33 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="login-register">
-    <form id="login-form">
-      <h2>Login</h2>
-      <input type="text" id="loginName" placeholder="Username" required />
-      <input type="password" id="loginPassword" placeholder="Password" required />
-      <button type="submit">Login</button>
-  </form>
-      <form id="register-form">
-        <h2>Register</h2>
-          <input type="text" id="registerName" placeholder="Username" required />
-          <input type="password" id="registerPassword" placeholder="Password" required />
-          <button type="submit">Register</button>
-      </form>
-  </div>
+    <div class="welcome-screen">
+      <h1>Добро пожаловать в твой-чат</h1>
+        <button id="login-button">Войти</button>
+        <button id="register-button">Регистрация</button>
+    </div>
+    <div class="login-register hidden">
+        <form id="login-form" class="hidden">
+            <h2>Login</h2>
+            <input type="text" id="loginName" placeholder="Username" required />
+            <input type="password" id="loginPassword" placeholder="Password" required />
+            <button type="submit">Login</button>
+        </form>
+        <form id="register-form" class="hidden">
+            <h2>Register</h2>
+            <input type="text" id="registerName" placeholder="Username" required />
+            <input type="password" id="registerPassword" placeholder="Password" required />
+            <button type="submit">Register</button>
+        </form>
+    </div>
     <div class="chat-container hidden">
         <div id="messages" class="messages"></div>
-         <div class="user-select">
-             <label for="user-recipient">Отправить:</label>
-               <select id="user-recipient">
-                  <option value="all">Все</option>
-               </select>
-         </div>
+        <div class="user-select">
+            <label for="user-recipient">Отправить:</label>
+            <select id="user-recipient">
+                <option value="all">Все</option>
+            </select>
+        </div>
         <div class="input-area">
             <input type="text" id="messageInput" placeholder="Введите сообщение">
             <button id="sendButton">Отправить</button>

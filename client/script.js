@@ -7,6 +7,11 @@ const registerForm = document.getElementById('register-form');
 const chatContainer = document.querySelector(".chat-container");
 const userRecipient = document.getElementById("user-recipient");
 
+const welcomeScreen = document.querySelector(".welcome-screen");
+const loginButton = document.getElementById('login-button');
+const registerButton = document.getElementById('register-button');
+const loginRegister = document.querySelector(".login-register");
+
 let userId = null;
 let userName = null;
 
@@ -21,6 +26,8 @@ socket.addEventListener('message', (event) => {
         switch (message.type) {
             case "register_success":
             case "login_success":
+                welcomeScreen.classList.add("hidden");
+                loginRegister.classList.add("hidden")
                 loginForm.classList.add('hidden');
                 registerForm.classList.add('hidden');
                 chatContainer.classList.remove('hidden');
@@ -52,8 +59,8 @@ socket.addEventListener('message', (event) => {
 sendButton.addEventListener('click', () => {
     const messageText = messageInput.value;
     if (messageText.trim()) {
-         const recipient = userRecipient.value;
-          socket.send(JSON.stringify({ type: 'message', text: messageText, recipient: recipient }));
+        const recipient = userRecipient.value;
+        socket.send(JSON.stringify({ type: 'message', text: messageText, recipient: recipient }));
         messageInput.value = '';
     }
 });
@@ -68,14 +75,14 @@ function displayMessage(message) {
 }
 
 function updateUserList(users) {
-  userRecipient.innerHTML = '<option value="all">Все</option>';
-  users.forEach(user => {
-      if (user.userId !== userId) {
-          const option = document.createElement('option');
-          option.value = user.userId;
-          option.textContent = user.name;
-          userRecipient.appendChild(option);
-      }
+    userRecipient.innerHTML = '<option value="all">Все</option>';
+    users.forEach(user => {
+        if (user.userId !== userId) {
+            const option = document.createElement('option');
+            option.value = user.userId;
+            option.textContent = user.name;
+            userRecipient.appendChild(option);
+        }
     })
 }
 
@@ -95,4 +102,18 @@ registerForm.addEventListener("submit", (event) => {
     const registerPassword = document.getElementById('registerPassword').value;
 
     socket.send(JSON.stringify({ type: 'register', name: registerName, password: registerPassword }));
+});
+//WELCOME SCREEN BUTTONS
+loginButton.addEventListener('click', () => {
+    welcomeScreen.classList.add('hidden');
+   loginRegister.classList.remove('hidden')
+    loginForm.classList.remove('hidden');
+   registerForm.classList.add('hidden')
+});
+
+registerButton.addEventListener('click', () => {
+    welcomeScreen.classList.add('hidden');
+    loginRegister.classList.remove('hidden')
+    registerForm.classList.remove('hidden');
+    loginForm.classList.add('hidden')
 });
